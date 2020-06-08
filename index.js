@@ -14,6 +14,13 @@ let user = databaseConfig.Database.user;
 let pw = databaseConfig.Database.pw;
 let dbname = databaseConfig.Database.dbname;
 
+// Datum
+let currentDate = new Date();
+let day = currentDate.getDate();
+let month = currentDate.getMonth();
+let year = currentDate.getFullYear();
+let clearDate = returnCurrentMonthElos(day, month, year);
+
 // create the connection to database
 const connection = mysql.createConnection({
     host: host,
@@ -25,7 +32,15 @@ const connection = mysql.createConnection({
 });
 
 app.get('/', function (req, res) {
-    res.send('<h1>API</h1>');
+
+    let apiPath = './api.html';
+
+    fs.readFile(apiPath, function (error, html) {
+        if (error) {
+            throw error;
+        }
+        res.end(html);
+    });
 });
 
 // Ausgabe Verbände
@@ -58,6 +73,70 @@ app.get('/verband=:association', function(req, res) {
     });
 });
 
+app.get('/club=:clubname', function (req, res) {
+
+    let clubname = req.params.clubname;
+
+    let params = [clubname, clearDate, year];
+
+    console.log(params);
+
+    var sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr INNER JOIN months ON months.id = elos_archiv.monthID WHERE club.clubname = ? AND elos_archiv.monthID = ? AND elos_archiv.year = ? GROUP BY player.lastname ASC";
+    //var sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr WHERE club.clubname = ? GROUP BY player.lastname ASC";
+
+    connection.query(sql, params, function(err, results, fields) {
+
+        // Mindestens ein Spieler muss in einem Club vorhanden sein
+        if(results.length >= 1){
+            res.send(results);
+        }else{
+            res.send("Ihr Club mit dem Namen " + clubname + " ist nicht vorhanden!")
+        }
+    });
+});
+
+//app.get('/ranking=:gender&month=:month', function (req, res) {
+app.get('/ranking=:gender', function (req, res) {
+
+    let gender = req.params.gender;
+    //let month = req.params.month;
+
+    //console.log(month);
+    console.log(gender);
+
+    var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC";
+
+    //var sql = "SELECT *, ranking FROM (SELECT COUNT(*) as ranking FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC) T WHERE ranking > 0"
+    //var sql = "SELECT * FROM (SELECT player.firstname, player.lastname, player.licenceNr, club.clubname, club.id, COUNT(*) as ranking FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC) data WHERE data.ranking > 0"
+
+    connection.query(sql, gender, function(err, results, fields) {
+
+        // Mindestens ein Spieler muss in einem Club vorhanden sein
+        if(results.length >= 1){
+
+            let rangingStart = 1;
+
+            for(let r in results){
+                results[r]['ranking'] = rangingStart;
+                rangingStart += 1;
+            }
+            res.send(results);
+        }else{
+            res.send("Ihr Club mit dem Namen " + gender + " ist nicht vorhanden!")
+        }
+    });
+});
+
 app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
 });
+
+function returnCurrentMonthElos(day, month, year) {
+
+    if(day < 10){
+        month = month;
+    }else{
+        month = month - 1;
+    }
+    return month;
+}
