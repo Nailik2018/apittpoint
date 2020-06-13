@@ -79,7 +79,7 @@ app.get('/club=:clubname', function (req, res) {
 
     let params = [clubname, clearDate, year];
 
-    console.log(params);
+    let currentUrl = req.headers.host;
 
     var sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr INNER JOIN months ON months.id = elos_archiv.monthID WHERE club.clubname = ? AND elos_archiv.monthID = ? AND elos_archiv.year = ? GROUP BY player.lastname ASC";
     //var sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr WHERE club.clubname = ? GROUP BY player.lastname ASC";
@@ -90,27 +90,73 @@ app.get('/club=:clubname', function (req, res) {
         if(results.length >= 1){
             res.send(results);
         }else{
-            res.send("Ihr Club mit dem Namen " + clubname + " ist nicht vorhanden!")
+            res.send("Ihr Club mit dem Namen " + clubname + " ist nicht vorhanden!\n" +
+                "Ein Beispiel für eine Gültige URL ist zum Beispiel: " + currentUrl + "/club=ostermundigen");
+        }
+    });
+});
+
+
+app.get('/ranking=:gender', function (req, res) {
+
+    let gender = req.params.gender.toLowerCase();
+
+    let d = new Date();
+
+    let day = d.getDate();
+    let month = d.getMonth();
+    let year = d.getFullYear();
+
+    let currentMonth = returnCurrentMonthElos(day, month, year);
+
+    let params = [gender, currentMonth, year];
+
+    var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.id = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
+
+    if(gender == "schweiz"){
+        params = [currentMonth, year]
+        sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE months.id = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
+    }
+
+    connection.query(sql, params, function(err, results, fields) {
+
+        // Mindestens ein Spieler muss in einem Club vorhanden sein
+        if(results.length >= 1){
+
+            let rangingStart = 1;
+
+            for(let r in results){
+                results[r]['ranking'] = rangingStart;
+                rangingStart += 1;
+            }
+            res.send(results);
+        }else{
+            res.send("Das Ranking mit dem Namen " + gender + " ist nicht vorhanden!")
         }
     });
 });
 
 //app.get('/ranking=:gender&month=:month', function (req, res) {
-app.get('/ranking=:gender', function (req, res) {
+//app.get('/ranking=:gender', function (req, res) {
+app.get('/rankingfilter=:gender&monat=:monat&jahr=:jahr', function (req, res) {
 
-    let gender = req.params.gender;
-    console.log(gender);
+    let gender = req.params.gender.toLowerCase();
+    let monat = req.params.monat;
+    let jahr = req.params.jahr;
 
-    var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC";
+    let params = [gender, monat, jahr];
 
-    if(gender == "Schweiz"){
-        sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID ORDER BY elos_archiv.elo DESC";
+    var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.month = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
+
+    if(gender == "schweiz"){
+        params = [monat, jahr];
+        sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE months.month = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
     }
 
     //var sql = "SELECT *, ranking FROM (SELECT COUNT(*) as ranking FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC) T WHERE ranking > 0"
     //var sql = "SELECT * FROM (SELECT player.firstname, player.lastname, player.licenceNr, club.clubname, club.id, COUNT(*) as ranking FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC) data WHERE data.ranking > 0"
 
-    connection.query(sql, gender, function(err, results, fields) {
+    connection.query(sql, params, function(err, results, fields) {
 
         // Mindestens ein Spieler muss in einem Club vorhanden sein
         if(results.length >= 1){
