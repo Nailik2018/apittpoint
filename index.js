@@ -99,12 +99,13 @@ app.get('/club=:clubname', function (req, res) {
 app.get('/ranking=:gender', function (req, res) {
 
     let gender = req.params.gender;
-    //let month = req.params.month;
-
-    //console.log(month);
     console.log(gender);
 
     var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC";
+
+    if(gender == "Schweiz"){
+        sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID ORDER BY elos_archiv.elo DESC";
+    }
 
     //var sql = "SELECT *, ranking FROM (SELECT COUNT(*) as ranking FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC) T WHERE ranking > 0"
     //var sql = "SELECT * FROM (SELECT player.firstname, player.lastname, player.licenceNr, club.clubname, club.id, COUNT(*) as ranking FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID WHERE gender.gender = ? ORDER BY elos_archiv.elo DESC) data WHERE data.ranking > 0"
@@ -122,7 +123,7 @@ app.get('/ranking=:gender', function (req, res) {
             }
             res.send(results);
         }else{
-            res.send("Ihr Club mit dem Namen " + gender + " ist nicht vorhanden!")
+            res.send("Das Ranking mit dem Namen " + gender + " ist nicht vorhanden!")
         }
     });
 });
@@ -133,10 +134,12 @@ app.listen(3000, function () {
 
 function returnCurrentMonthElos(day, month, year) {
 
-    if(day < 10){
-        month = month;
-    }else{
+    month = month + 1;
+
+    if(day <= 9){
         month = month - 1;
+    }else{
+        month = month;
     }
     return month;
 }
