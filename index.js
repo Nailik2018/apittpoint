@@ -97,9 +97,9 @@ app.get('/club=:clubname', function (req, res) {
 });
 
 
-app.get('/ranking=:gender', function (req, res) {
+app.get('/ranking=:geschlecht', function (req, res) {
 
-    let gender = req.params.gender.toLowerCase();
+    let geschlecht = req.params.geschlecht.toLowerCase();
 
     let d = new Date();
 
@@ -109,11 +109,11 @@ app.get('/ranking=:gender', function (req, res) {
 
     let currentMonth = returnCurrentMonthElos(day, month, year);
 
-    let params = [gender, currentMonth, year];
+    let params = [geschlecht, currentMonth, year];
 
     var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.id = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
 
-    if(gender == "schweiz"){
+    if(geschlecht == "schweiz"){
         params = [currentMonth, year]
         sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE months.id = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
     }
@@ -131,24 +131,25 @@ app.get('/ranking=:gender', function (req, res) {
             }
             res.send(results);
         }else{
-            res.send("Das Ranking mit dem Namen " + gender + " ist nicht vorhanden!")
+            res.send("Das Ranking für das Geschlecht " + geschlecht + "ist nicht vorhanden! Gülgtige Geschlechter sind Herren, Damen und Schweiz für alle.")
         }
     });
 });
 
 //app.get('/ranking=:gender&month=:month', function (req, res) {
 //app.get('/ranking=:gender', function (req, res) {
-app.get('/rankingfilter=:gender&monat=:monat&jahr=:jahr', function (req, res) {
+//app.get('/rankingfilter=:gender&monat=:monat&jahr=:jahr', function (req, res) {
+app.get('/rangking&geschlecht=:geschlecht&monat=:monat&jahr=:jahr', function (req, res) {
 
-    let gender = req.params.gender.toLowerCase();
+    let geschlecht = req.params.geschlecht.toLowerCase();
     let monat = req.params.monat;
     let jahr = req.params.jahr;
 
-    let params = [gender, monat, jahr];
+    let params = [geschlecht, monat, jahr];
 
     var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.month = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
 
-    if(gender == "schweiz"){
+    if(geschlecht == "schweiz"){
         params = [monat, jahr];
         sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE months.month = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
     }
@@ -169,7 +170,7 @@ app.get('/rankingfilter=:gender&monat=:monat&jahr=:jahr', function (req, res) {
             }
             res.send(results);
         }else{
-            res.send("Das Ranking mit dem Namen " + gender + " ist nicht vorhanden!")
+            res.send("Das Ranking für das Geschlecht " + geschlecht + " ist nicht vorhanden!")
         }
     });
 });
