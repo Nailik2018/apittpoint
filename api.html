@@ -32,16 +32,18 @@
 
         .url-call-text, .description-text{
             font-size: 120%;
-            text-align: center;
             color: black;
         }
 
         .url-call, .description{
-            padding-top: 12px;
+            padding-top: 0;
+            margin-top: 0;
+            top: 0;
         }
 
-        .url-call-text{
+        .url-call-text, .description-text{
             padding-left: 10px;
+            padding-right: 10px;
         }
 
         .method-text{
@@ -159,6 +161,14 @@
             .eleven { grid-column-end: span 11 }
         }
 
+        @media only screen and (max-width: 940px) {
+
+            .description-text, .url-call-text{
+                font-size: 80%;
+                text-indent:-30px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -217,6 +227,12 @@
     </div>
     <div class="one"></div>
 
+    <div class="one"></div>
+    <div class="ten">
+        <p>http://localhost:3000/verbaende</p>
+    </div>
+    <div class="one"></div>
+
     <!--Verband Sektion-->
     <!--######################################-->
     <!--######################################-->
@@ -238,6 +254,12 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="one"></div>
+
+    <div class="one"></div>
+    <div class="ten">
+        <p>http://localhost:3000/verband=mttv</p>
     </div>
     <div class="one"></div>
 
@@ -265,6 +287,12 @@
     </div>
     <div class="one"></div>
 
+    <div class="one"></div>
+    <div class="ten">
+        <p>http://localhost:3000/club=ostermundigen</p>
+    </div>
+    <div class="one"></div>
+
     <!--Ranking Herren Sektion-->
     <!--######################################-->
     <!--######################################-->
@@ -286,6 +314,12 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="one"></div>
+
+    <div class="one"></div>
+    <div class="ten">
+        <p>http://localhost:3000/rangking=herren</p>
     </div>
     <div class="one"></div>
 
@@ -313,6 +347,12 @@
     </div>
     <div class="one"></div>
 
+    <div class="one"></div>
+    <div class="ten">
+        <p>http://localhost:3000/rangking=damen</p>
+    </div>
+    <div class="one"></div>
+
     <!--Ranking Herren und Damen Sektion-->
     <!--######################################-->
     <!--######################################-->
@@ -334,6 +374,12 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="one"></div>
+
+    <div class="one"></div>
+    <div class="ten">
+        <p>http://localhost:3000/rangking=schweiz</p>
     </div>
     <div class="one"></div>
 
