@@ -1,3 +1,4 @@
+
 var express = require('express');
 var app = express();
 const mysql = require('mysql2');
@@ -6,7 +7,7 @@ var fs = require('fs');
 var ini = require('ini');
 
 // Datenbank Verbindungsdatei
-var databaseConfig = ini.parse(fs.readFileSync('./database.ini', 'utf-8'));
+let databaseConfig = ini.parse(fs.readFileSync('./database.ini', 'utf-8'));
 
 // Datenbank verbindungsdaten aus der databaseini Datei
 let host = databaseConfig.Database.host;
@@ -60,7 +61,7 @@ app.get('/verbaende', function (req, res) {
 app.get('/verband=:association', function(req, res) {
 
     let verband = req.params.association;
-    var sql = "SELECT club.id, club.clubname, club.associationID, association.association FROM club INNER JOIN association ON association.id = club.associationID WHERE association.association = ? ORDER BY club.clubname ASC";
+    let sql = "SELECT club.id, club.clubname, club.associationID, association.association FROM club INNER JOIN association ON association.id = club.associationID WHERE association.association = ? ORDER BY club.clubname ASC";
 
     connection.query(sql, verband, function(err, results, fields) {
 
@@ -76,15 +77,17 @@ app.get('/verband=:association', function(req, res) {
 app.get('/club=:clubname', function (req, res) {
 
     let clubname = req.params.clubname;
-
+    
     let params = [clubname, clearDate, year];
 
     let currentUrl = req.headers.host;
 
-    var sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr INNER JOIN months ON months.id = elos_archiv.monthID WHERE club.clubname = ? AND elos_archiv.monthID = ? AND elos_archiv.year = ? GROUP BY player.lastname ASC";
+    let sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr INNER JOIN months ON months.id = elos_archiv.monthID WHERE club.clubname = ? AND elos_archiv.monthID = ? AND elos_archiv.year = ? GROUP BY player.lastname ASC";
     //var sql = "SELECT * FROM club INNER JOIN player ON player.clubID = club.id INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr WHERE club.clubname = ? GROUP BY player.lastname ASC";
 
     connection.query(sql, params, function(err, results, fields) {
+        console.log(results);
+        console.log(clearDate);
 
         // Mindestens ein Spieler muss in einem Club vorhanden sein
         if(results.length >= 1){
@@ -111,7 +114,7 @@ app.get('/ranking=:geschlecht', function (req, res) {
 
     let params = [geschlecht, currentMonth, year];
 
-    var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.id = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
+    let sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.id = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
 
     if(geschlecht == "schweiz"){
         params = [currentMonth, year]
@@ -147,7 +150,7 @@ app.get('/rangking&geschlecht=:geschlecht&monat=:monat&jahr=:jahr', function (re
 
     let params = [geschlecht, monat, jahr];
 
-    var sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.month = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
+    let sql = "SELECT * FROM elos_archiv INNER JOIN player ON player.licenceNr = elos_archiv.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN months ON months.id = elos_archiv.monthID WHERE gender.gender = ? AND months.month = ? AND elos_archiv.year = ? ORDER BY elos_archiv.elo DESC";
 
     if(geschlecht == "schweiz"){
         params = [monat, jahr];
@@ -174,6 +177,27 @@ app.get('/rangking&geschlecht=:geschlecht&monat=:monat&jahr=:jahr', function (re
         }
     });
 });
+
+app.get('/licencenumber=:licencenumber', function (req, res) {
+
+    let params = [req.params.licencenumber];
+
+    let sql = "SELECT * FROM player INNER JOIN elos_archiv ON elos_archiv.licenceNr = player.licenceNr INNER JOIN gender ON gender.id = player.genderID INNER JOIN club ON club.id = player.clubID INNER JOIN months ON months.id = elos_archiv.monthID INNER JOIN association ON association.id = club.associationID WHERE player.licenceNr = ?";
+
+    connection.query(sql, params, function(err, results, fields) {
+
+        // Mindestens ein Datensatz muss in einem Spieler vorhanden sein
+        if(results.length >= 1){
+            res.send(results);
+            for (let dataSet of results){
+                console.log(dataSet);
+                console.log("----------");
+            }
+        }else{
+            res.send("Der Spieler mit der Lizenznummer: " + params + " ist nicht vorhanden!")
+        }
+    });
+})
 
 app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
